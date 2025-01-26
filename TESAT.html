@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Metadata -->
+    <meta name="author" content="Noah Greupner" />
+    <meta name="description" content="Temporal Ecosystem Service Assessment Tool" />
+    <meta charset="UTF-8" />
+
+    <!-- Title and Icon -->
+    <title>Temporal Ecosystem Service Assessment Tool</title>
+    <link rel="icon" type="image/x-icon" href="data/favicon.ico" />
+
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- OpenLayers CSS -->
+    <link
+      rel="stylesheet"
+      href="https://openlayers.org/en/v6.15.1/css/ol.css"
+      type="text/css"
+    />
+
+    <!-- OpenLayers JS -->
+    <script
+      src="https://openlayers.org/en/v6.15.1/build/ol.js"
+      type="text/javascript"
+    ></script>
+
+    <!-- Include JavaScript AND CSS file from the ol LayerSwitcher plugin -->
+    <link rel="stylesheet" href="ol-layerswitcher/ol-layerswitcher.css" />
+    <script src="ol-layerswitcher/ol-layerswitcher.js" type="text/javascript"></script>
+  </head>
+
+  <body>
+    <!-- Header -->
+    <div id="header">
+      <p>
+        TESAT - Temporal Ecosystem Service Assessment Tool
+      </p>
+    </div>
+
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <!-- Info Button -->
+    <button id="infoButton" style="position: absolute; top: 10px; right: 10px; z-index: 1000;">Info</button>
+
+    <!-- Info Panel (Hidden by Default) -->
+    <div id="infoPanel" style="display: none; position: absolute; top: 50px; right: 10px; background: white; padding: 20px; border: 1px solid black; z-index: 2000; max-width: 300px;">
+      <h4>About</h4>
+      <p>This TESA tool can analyze the temporal development of ecosystem services in a specific area over time.</p>
+
+      <h4>Data Sources</h4>
+      <ul>
+        <li>
+          Basemaps: <a href="https://stadiamaps.com/" target="_blank">Stadia Maps</a>
+        </li>
+      </ul>
+
+      <h4>Author</h4>
+      <p>
+        Noah Greupner | <a href="https://noah-greupner.com/" target="_blank">noah-greupner.com</a>
+      </p>
+    </div>
+
+    <!-- Chart Container -->
+    <div id="chart">
+      <p>
+        Please select an area on the map to display the temporal ES dynamics. 
+      </p>
+    </div>
+
+    <script>
+      // Bing Maps API key
+      const bingApiKey = "ApTJzdkyN1DdFKkRAE6QIDtzihNaf6IWJsT-nQ_2eMoO4PN__0Tzhl2-WgJtXFSp";
+
+      // Define base layers
+      const baseLayers = [
+      new ol.layer.Tile({
+          title: "Hybrid",
+          type: "base",
+          visible: false,
+          source: new ol.source.BingMaps({
+            key: bingApiKey,
+            imagerySet: "AerialWithLabels",
+          }),
+        }),
+      new ol.layer.Tile({
+          title: "Imagery",
+          type: "base",
+          visible: false,
+          source: new ol.source.BingMaps({
+            key: bingApiKey,
+            imagerySet: "Aerial",
+          }),
+        }),
+        new ol.layer.Tile({
+          title: "Topographic",
+          type: "base",
+          visible: true,
+          source: new ol.source.OSM(),
+        }),  
+      ];
+
+      // Define map view
+      const mapView = new ol.View({
+        center: [0, 0],
+        zoom: 2,
+      });
+
+      // Initialize map
+      const map = new ol.Map({
+        target: "map",
+        layers: [
+          new ol.layer.Group({
+            title: "BaseMaps",
+            layers: baseLayers,
+          }),
+        ],
+        view: mapView,
+      });
+
+      // Add LayerSwitcher control
+      const layerSwitcher = new ol.control.LayerSwitcher({
+        activationMode: "click",
+        startActive: false,
+        tipLabel: "Basemaps",
+        groupSelectStyle: "group",
+      });
+      map.addControl(layerSwitcher);
+
+      // Add GeoJSON layer for manual polygons
+      const geojsonLayer = new ol.layer.Vector({
+        source: new ol.source.Vector({
+          url: 'data/salzburg.json', 
+          format: new ol.format.GeoJSON(),
+        }),
+        style: new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: "#d3d3d3",
+            width: 1,
+          }),
+          fill: new ol.style.Fill({
+            color: "rgba(128, 128, 128, 0.4)",
+          }),
+        }),
+      });
+
+      // Add the GeoJSON layer to the map
+      map.addLayer(geojsonLayer);
+
+      // Fit the map view to the extent of the GeoJSON layer
+      geojsonLayer.getSource().once('change', () => {
+        if (geojsonLayer.getSource().getState() === 'ready') {
+          const extent = geojsonLayer.getSource().getExtent();
+          mapView.fit(extent, { padding: [50, 50, 50, 50] });
+        }
+      });
+
+      // Add click interaction to display feature information
+      map.on('singleclick', function (event) {
+        map.forEachFeatureAtPixel(event.pixel, function (feature) {
+          const properties = feature.getProperties();
+          alert(`Feature clicked:\nName: ${properties.name || 'Unknown'}\nISO: ${properties.iso || 'N/A'}`);
+        });
+      });
+
+      // Toggle Info Panel Visibility
+      const infoButton = document.getElementById('infoButton');
+      const infoPanel = document.getElementById('infoPanel');
+
+      infoButton.addEventListener('click', () => {
+        if (infoPanel.style.display === 'none' || infoPanel.style.display === '') {
+          infoPanel.style.display = 'block';
+        } else {
+          infoPanel.style.display = 'none';
+        }
+      });
+    </script>
+  </body>
+</html>

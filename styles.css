@@ -1,0 +1,75 @@
+/* set general properties */
+html {
+    font-family: Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+  
+}
+
+body {
+    overflow: hidden;
+}
+
+
+/* set header properties */
+#header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px; 
+    background-color: #0e0e0e;
+    color: #d3d3d3;
+    text-align: center;
+    font-weight: bold;
+    font-size: 150%;
+}
+
+/* set header p properties */
+#header p {
+    margin: 0;
+    margin-top: 10px; 
+}
+
+/* set map properties */
+#map {
+    position: absolute;
+    top: 60px; 
+    left: 0;
+    right: 550px;
+    bottom: 0; 
+    background-color: #333333;
+}
+
+/* set panel properties*/
+#chart {
+    position: absolute;
+    padding: 20px;
+    top: 60px;
+    right: 0;
+    width: 510px;
+    height: 100%;
+    background-color: lightgrey;
+    color: #1d1717;
+    z-index: 1000;
+    overflow: auto;
+    scrollbar-width: thin;
+    border-left: 3px solid black;
+}
+
+
+/* set footer properties */
+#footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0px;
+    background-color: #0e0e0e; 
+    color: #d3d3d3; 
+    text-align: center;
+    font-weight: bold;
+    font-size: 100%;
+    padding: 0;
+    margin: 0;
+}
