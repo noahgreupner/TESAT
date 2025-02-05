@@ -29,6 +29,13 @@
     <!-- Include JavaScript AND CSS file from the ol LayerSwitcher plugin -->
     <link rel="stylesheet" href="ol-layerswitcher/ol-layerswitcher.css" />
     <script src="ol-layerswitcher/ol-layerswitcher.js" type="text/javascript"></script>
+  
+    <!-- D3 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+
+    <!-- Radar Chart Script -->
+    <script src="testRadarChart.js"></script>
+
   </head>
 
   <body>
@@ -48,7 +55,10 @@
     <!-- Info Panel (Hidden by Default) -->
     <div id="infoPanel" style="display: none; position: absolute; top: 50px; right: 10px; background: white; padding: 20px; border: 1px solid black; z-index: 2000; max-width: 300px;">
       <h4>About</h4>
-      <p>This TESA tool can analyze the temporal development of ecosystem services in a specific area over time.</p>
+      <p>The TESAT (Temporal Ecosystem Service Assessment Tool) can be used to visualize
+         the temporal development of ecosystem services in a specific area over time. 
+         It requires a GeoJSON file of an area and a corresponding CSV file resulting 
+         from a temporal ES assessment.  </p>
 
       <h4>Data Sources</h4>
       <ul>
@@ -65,117 +75,82 @@
 
     <!-- Chart Container -->
     <div id="chart">
-      <p>
-        Please select an area on the map to display the temporal ES dynamics. 
-      </p>
+      <div id="chartMessage">
+        <p>Please select an area to access the data.</p>
+      </div>
+      <div id="radarChart" style="display: none;"></div>
     </div>
+    
 
+    <!-- Map Script -->
+    <script src="map.js"></script>
+
+    <!-- Radar Chart Script -->
     <script>
-      // Bing Maps API key
-      const bingApiKey = "ApTJzdkyN1DdFKkRAE6QIDtzihNaf6IWJsT-nQ_2eMoO4PN__0Tzhl2-WgJtXFSp";
-
-      // Define base layers
-      const baseLayers = [
-      new ol.layer.Tile({
-          title: "Hybrid",
-          type: "base",
-          visible: false,
-          source: new ol.source.BingMaps({
-            key: bingApiKey,
-            imagerySet: "AerialWithLabels",
-          }),
-        }),
-      new ol.layer.Tile({
-          title: "Imagery",
-          type: "base",
-          visible: false,
-          source: new ol.source.BingMaps({
-            key: bingApiKey,
-            imagerySet: "Aerial",
-          }),
-        }),
-        new ol.layer.Tile({
-          title: "Topographic",
-          type: "base",
-          visible: true,
-          source: new ol.source.OSM(),
-        }),  
+      // Advanced Radar Chart Implementation
+      const data = [
+        [
+        { axis: "Drinking Water", value: 5 },
+        { axis: "Irrigation Water", value: 4 },
+        { axis: "Hydropower", value: 3 },
+        { axis: "Flood Protection", value: 2 },
+        { axis: "Water Cylcle Regulation", value: 1 },
+        { axis: "Water Quality Maintenance", value: 1 },
+        { axis: "Erosion Control", value: 1 },
+        { axis: "Recreation & Tourism", value: 1 },
+      ],
+      [
+        { axis: "Drinking Water", value: 2 },
+        { axis: "Irrigation Water", value: 3 },
+        { axis: "Hydropower", value: 5 },
+        { axis: "Flood Protection", value: 2 },
+        { axis: "Water Cylcle Regulation", value: 3 },
+        { axis: "Water Quality Maintenance", value: 3 },
+        { axis: "Erosion Control", value: 2 },
+        { axis: "Recreation & Tourism", value: 4 },
+        ]
       ];
 
-      // Define map view
-      const mapView = new ol.View({
-        center: [0, 0],
-        zoom: 2,
-      });
+      const chartContainer = document.getElementById("radarChart");
 
-      // Initialize map
-      const map = new ol.Map({
-        target: "map",
-        layers: [
-          new ol.layer.Group({
-            title: "BaseMaps",
-            layers: baseLayers,
-          }),
-        ],
-        view: mapView,
-      });
+      // Hinzufügen von Klick-Interaktionen für die Karte
+map.on('singleclick', function (event) {
+  map.forEachFeatureAtPixel(event.pixel, function (feature) {
+    // Text ausblenden und Radar Chart anzeigen
+    document.getElementById("chartMessage").style.display = "none";
+    document.getElementById("radarChart").style.display = "block";
 
-      // Add LayerSwitcher control
-      const layerSwitcher = new ol.control.LayerSwitcher({
-        activationMode: "click",
-        startActive: false,
-        tipLabel: "Basemaps",
-        groupSelectStyle: "group",
-      });
-      map.addControl(layerSwitcher);
+    // Radar Chart aktualisieren
+    renderRadarChart(data); // Verwende die bereits deklarierten Daten
+  });
+});
 
-      // Add GeoJSON layer for manual polygons
-      const geojsonLayer = new ol.layer.Vector({
-        source: new ol.source.Vector({
-          url: 'data/salzburg.json', 
-          format: new ol.format.GeoJSON(),
-        }),
-        style: new ol.style.Style({
-          stroke: new ol.style.Stroke({
-            color: "#d3d3d3",
-            width: 1,
-          }),
-          fill: new ol.style.Fill({
-            color: "rgba(128, 128, 128, 0.4)",
-          }),
-        }),
-      });
+// Funktion zum Rendern des Radar Charts
+function renderRadarChart(data) {
+  const chartContainer = document.getElementById("radarChart");
 
-      // Add the GeoJSON layer to the map
-      map.addLayer(geojsonLayer);
+    // Entferne den gesamten Inhalt des Containers
+    chartContainer.innerHTML = "";
 
-      // Fit the map view to the extent of the GeoJSON layer
-      geojsonLayer.getSource().once('change', () => {
-        if (geojsonLayer.getSource().getState() === 'ready') {
-          const extent = geojsonLayer.getSource().getExtent();
-          mapView.fit(extent, { padding: [50, 50, 50, 50] });
-        }
-      });
+const containerWidth = chartContainer.offsetWidth || 400; // Standardbreite
+const containerHeight = chartContainer.offsetHeight || 400; // Standardhöhe
 
-      // Add click interaction to display feature information
-      map.on('singleclick', function (event) {
-        map.forEachFeatureAtPixel(event.pixel, function (feature) {
-          const properties = feature.getProperties();
-          alert(`Feature clicked:\nName: ${properties.name || 'Unknown'}\nISO: ${properties.iso || 'N/A'}`);
-        });
-      });
+const radarChartOptions = {
+  w: containerWidth - 100,
+  h: containerHeight - 100,
+  margin: { top: 60, right: 80, bottom: 60, left: 80 },
+  levels: 5,
+  maxValue: 1.0,
+  roundStrokes: true,
+  color: d3.scale.ordinal().range(["#EDC951", "#CC333F", "#00A0B0"]),
+};
 
-      // Toggle Info Panel Visibility
-      const infoButton = document.getElementById('infoButton');
-      const infoPanel = document.getElementById('infoPanel');
+// Entferne das bestehende Chart und rendere ein neues
+d3.select("#radarChart").select("svg").remove();
 
-      infoButton.addEventListener('click', () => {
-        if (infoPanel.style.display === 'none' || infoPanel.style.display === '') {
-          infoPanel.style.display = 'block';
-        } else {
-          infoPanel.style.display = 'none';
-        }
-      });
+RadarChart("#radarChart", data, radarChartOptions);
+}
+
     </script>
   </body>
 </html>

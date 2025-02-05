@@ -10,7 +10,6 @@ body {
     overflow: hidden;
 }
 
-
 /* set header properties */
 #header {
     position: absolute;
@@ -36,27 +35,34 @@ body {
     position: absolute;
     top: 60px; 
     left: 0;
-    right: 550px;
+    right: 740px;
     bottom: 0; 
     background-color: #333333;
 }
 
-/* set panel properties*/
+/* Chart Panel */
 #chart {
     position: absolute;
     padding: 20px;
     top: 60px;
     right: 0;
-    width: 510px;
-    height: 100%;
+    width: 700px;
+    height: calc(100% - 60px); /* Dynamische Höhe, damit es unter dem Header bleibt */
     background-color: lightgrey;
     color: #1d1717;
     z-index: 1000;
-    overflow: auto;
+    overflow: hidden;
     scrollbar-width: thin;
     border-left: 3px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
+#chartMessage {
+    font-size: 16px;
+    color: #333;
+  }
 
 /* set footer properties */
 #footer {
